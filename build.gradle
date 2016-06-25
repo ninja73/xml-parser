@@ -1,0 +1,31 @@
+group 'xml.parser'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'java'
+apply plugin: 'application'
+
+// JDK 8
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+mainClassName = "com.parser.App"
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+    // akka
+    compile group: 'com.typesafe.akka', name: 'akka-actor_2.11', version: '2.4.7'
+    compile group: 'com.typesafe.akka', name: 'akka-slf4j_2.11', version: '2.4.7'
+    // logback
+    compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.1.7'
+
+    compile group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.12'
+
+}
+
+run {
+    args System.getProperty("args").split()
+}
