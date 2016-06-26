@@ -3,8 +3,7 @@ package com.parser;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
-import com.parser.actor.NewXmlFileParser;
-import com.parser.actor.OldXmlFileParser;
+import com.parser.actor.XmlParser;
 import com.parser.router.WorkerRouter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,11 +19,12 @@ public class App {
             String oldXml = args[0];
             String newXml = args[1];
 
-            ActorRef start = actorSystem.actorOf(NewXmlFileParser.props(newXml), "new-xml-parser");
-            actorSystem.actorOf(OldXmlFileParser.props(oldXml), "old-xml-parser");
+            ActorRef newFile = actorSystem.actorOf(XmlParser.props(newXml), "new-xml-parser");
+            ActorRef oldFile = actorSystem.actorOf(XmlParser.props(oldXml), "old-xml-parser");
 
             actorSystem.actorOf(Props.create(WorkerRouter.class), "router");
-            start.tell("run", ActorRef.noSender());
+            newFile.tell("run", ActorRef.noSender());
+            oldFile.tell("run", ActorRef.noSender());
         } else {
             log.error("set argument old and new xml file");
         }

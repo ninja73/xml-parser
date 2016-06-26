@@ -1,61 +1,51 @@
 package com.parser.router;
 
 import akka.actor.AbstractActor;
-import akka.actor.ActorSelection;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.japi.pf.ReceiveBuilder;
-import com.parser.model.Offer;
-import org.glassfish.jersey.client.ClientProperties;
+import com.parser.model.Result;
 
-import javax.ws.rs.ProcessingException;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Response;
+import java.io.IOException;
+import java.net.*;
+import java.util.StringJoiner;
 
 
 public class WorkerThread extends AbstractActor {
 
     private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
-    private ActorSelection oldXmlFileParser;
-    private static Client client = ClientBuilder.newClient();
-
-    @Override
-    public void preStart() throws Exception {
-        this.oldXmlFileParser = this.getContext().actorSelection("/user/old-xml-parser");
-    }
 
     public WorkerThread() {
         receive(ReceiveBuilder
-                .match(Offer.class, this::sendOffer)
-                .match(String.class, str -> oldXmlFileParser.tell(str, self()))
+                .match(Result.class, this::sendOffer)
                 .matchAny(o -> log.info("received unknown message"))
                 .build());
     }
 
-    private void sendOffer(Offer offer) {
-        String imgStatus = checkImg(offer.getPicture());
-        offer.setPictureStatus(imgStatus);
-        oldXmlFileParser.tell(offer, self());
+    private void sendOffer(Result result) {
+        Boolean checkImg = checkImg(result.getOffer().getPicture());
+        StringJoiner joiner = new StringJoiner(" ");
+        if(!result.getType().isEmpty()) {
+            joiner.add(result.getType());
+        }
+        if(checkImg) {
+            joiner.add("p");
+        }
+        if(joiner.length() > 0 ) log.info(result.getOffer().getId() + " " + joiner.toString());
     }
 
-    private String checkImg(String url){
+    private Boolean checkImg(String url){
         try {
-            if(url == null || url.equals("")) {
-                return "p";
-            }
-            client.property(ClientProperties.CONNECT_TIMEOUT, 100);
-            client.property(ClientProperties.READ_TIMEOUT, 100);
-
-            WebTarget webResult = client.target(url);
-            Response response = webResult.request().get();
-            if(response.getStatus() != 200) {
-                throw new ProcessingException("Failed : HTTP error code : " + response.getStatus());
-            }
-            return "";
-        } catch (ProcessingException e) {
-            return "p";
+            HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+            connection.setConnectTimeout(100);
+            connection.setReadTimeout(100);
+            connection.setRequestMethod("HEAD");
+            int responseCode = connection.getResponseCode();
+            if(responseCode != 200)
+                return false;
+            return true;
+        } catch (IOException exception) {
+            return false;
         }
     }
 }
