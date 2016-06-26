@@ -24,6 +24,8 @@ public class Offer {
     private String description;
     private Boolean manufacturerWarranty;
 
+    private String pictureStatus;
+
     @XmlElement(name = "param")
     private List<Param> params = new ArrayList<>();
 
@@ -145,6 +147,14 @@ public class Offer {
 
     public void setParams(List<Param> params) {
         this.params = params;
+    }
+
+    public String getPictureStatus() {
+        return pictureStatus;
+    }
+
+    public void setPictureStatus(String pictureStatus) {
+        this.pictureStatus = pictureStatus;
     }
 
     @Override

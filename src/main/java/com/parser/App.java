@@ -20,8 +20,8 @@ public class App {
             String oldXml = args[0];
             String newXml = args[1];
 
-            ActorRef start = actorSystem.actorOf(OldXmlFileParser.props(oldXml), "old-xml-parser");
-            actorSystem.actorOf(NewXmlFileParser.props(newXml), "new-xml-parser");
+            ActorRef start = actorSystem.actorOf(NewXmlFileParser.props(newXml), "new-xml-parser");
+            actorSystem.actorOf(OldXmlFileParser.props(oldXml), "old-xml-parser");
 
             actorSystem.actorOf(Props.create(WorkerRouter.class), "router");
             start.tell("run", ActorRef.noSender());

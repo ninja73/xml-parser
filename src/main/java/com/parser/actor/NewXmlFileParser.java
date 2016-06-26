@@ -1,11 +1,26 @@
 package com.parser.actor;
 
+import akka.actor.ActorSelection;
 import akka.actor.Props;
-import akka.actor.Terminated;
 import com.parser.model.Offer;
+
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 
 public class NewXmlFileParser extends XmlParser {
 
+    private ActorSelection workerRouter;
+
+    @Override
+    public void preStart() throws Exception {
+        workerRouter = getContext().actorSelection("/user/router");
+    }
     public static Props props(String fileName) {
         return Props.create(NewXmlFileParser.class, () -> new NewXmlFileParser(fileName));
     }
@@ -15,22 +30,29 @@ public class NewXmlFileParser extends XmlParser {
     }
 
     @Override
-    void process(Object message) {
-        if(message instanceof Offer) {
-            Offer offer = (Offer) message;
-            if (offers.containsKey(offer.getId())) {
-                Offer findOffer = offers.get(offer.getId());
-                if(offer.equals(findOffer)) {
-                    log.info("EQUALS");
-                } else {
-                    log.info("NOT EQUALS");
+    void process(Offer offer) {
+        log.warning("message not support");
+    }
+
+    @Override
+    void process(String message) {
+        XMLInputFactory factory = XMLInputFactory.newFactory();
+        try {
+            XMLStreamReader reader = factory.createXMLStreamReader(new FileInputStream(fileName));
+            Unmarshaller unmarshaller = getUnmarshaller();
+            JAXBElement<Offer> offerJAXBElement;
+
+            while (reader.hasNext()) {
+                int event = reader.next();
+                if(event == XMLStreamReader.START_ELEMENT && reader.getLocalName().equals("offer")) {
+                    offerJAXBElement = unmarshaller.unmarshal(reader, Offer.class);
+                    workerRouter.tell(offerJAXBElement.getValue(), self());
                 }
-            } else {
-                //log.info("NOT FOUND OFFER: " + offer.getId());
             }
+
+        } catch (XMLStreamException | FileNotFoundException | JAXBException e) {
+            e.printStackTrace();
         }
-        if(offers.size() < 1) {
-           // sender().tell(Terminated("close"));
-        }
+        workerRouter.tell("done", self());
     }
 }

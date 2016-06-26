@@ -15,7 +15,6 @@ public class WorkerRouter extends AbstractActor {
 
     @Override
     public void preStart() throws Exception {
-        super.preStart();
         worker = getContext().actorOf(
                 new RoundRobinPool(20).props(Props.create(WorkerThread.class)),
                 "router-pool");
@@ -24,6 +23,7 @@ public class WorkerRouter extends AbstractActor {
     public WorkerRouter() {
         receive(ReceiveBuilder
                 .match(Offer.class, offer -> worker.tell(offer, self()))
+                .match(String.class, str -> worker.tell(str, self()))
                 .matchAny(o -> log.info("received unknown message"))
                 .build());
     }
