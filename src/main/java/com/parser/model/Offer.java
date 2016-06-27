@@ -149,7 +149,7 @@ public class Offer {
 
     @Override
     public boolean equals(Object obj) {
-        return this.hashCode() == obj.hashCode();
+        return obj != null && obj instanceof Offer && this.hashCode() == obj.hashCode();
     }
 
     @Override

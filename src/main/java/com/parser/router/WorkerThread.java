@@ -1,9 +1,7 @@
 package com.parser.router;
 
-import akka.actor.AbstractActor;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
 import akka.japi.pf.ReceiveBuilder;
+import com.parser.BaseActor;
 import com.parser.model.Result;
 
 import java.io.IOException;
@@ -11,9 +9,7 @@ import java.net.*;
 import java.util.StringJoiner;
 
 
-public class WorkerThread extends AbstractActor {
-
-    private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
+public class WorkerThread extends BaseActor {
 
     public WorkerThread() {
         receive(ReceiveBuilder
@@ -23,7 +19,7 @@ public class WorkerThread extends AbstractActor {
     }
 
     private void sendOffer(Result result) {
-        Boolean checkImg = checkImg(result.getOffer().getPicture());
+        Boolean checkImg = checkImg(result.getPicture());
         StringJoiner joiner = new StringJoiner(" ");
         if(!result.getType().isEmpty()) {
             joiner.add(result.getType());
@@ -31,7 +27,7 @@ public class WorkerThread extends AbstractActor {
         if(checkImg) {
             joiner.add("p");
         }
-        if(joiner.length() > 0 ) log.info(result.getOffer().getId() + " " + joiner.toString());
+        if(joiner.length() > 0 ) log.info(result.getId() + " " + joiner.toString());
     }
 
     private Boolean checkImg(String url){

@@ -1,12 +1,19 @@
 package com.parser.model;
 
 public class Result {
+    private Long id;
     private String type;
-    private Offer offer;
+    private String picture;
+    private Integer offerHashCode;
 
-    public Result(String type, Offer offer) {
+    public Result() {
+    }
+
+    public Result(Long id, String type, String picture, Integer offerHashCode) {
+        this.id = id;
         this.type = type;
-        this.offer = offer;
+        this.picture = picture;
+        this.offerHashCode = offerHashCode;
     }
 
     public String getType() {
@@ -17,11 +24,27 @@ public class Result {
         this.type = type;
     }
 
-    public Offer getOffer() {
-        return offer;
+    public Long getId() {
+        return id;
     }
 
-    public void setOffer(Offer offer) {
-        this.offer = offer;
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getPicture() {
+        return picture;
+    }
+
+    public void setPicture(String picture) {
+        this.picture = picture;
+    }
+
+    public Integer getOfferHashCode() {
+        return offerHashCode;
+    }
+
+    public void setOfferHashCode(Integer offerHashCode) {
+        this.offerHashCode = offerHashCode;
     }
 }

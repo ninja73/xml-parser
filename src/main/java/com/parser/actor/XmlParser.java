@@ -1,11 +1,9 @@
 package com.parser.actor;
 
-import akka.actor.AbstractActor;
 import akka.actor.ActorSelection;
 import akka.actor.Props;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
 import akka.japi.pf.ReceiveBuilder;
+import com.parser.BaseActor;
 import com.parser.model.Offer;
 
 import javax.xml.bind.JAXBContext;
@@ -18,9 +16,8 @@ import javax.xml.stream.XMLStreamReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 
-public class XmlParser extends AbstractActor {
+public class XmlParser extends BaseActor {
 
-    private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
     private ActorSelection workerRouter;
 
     private String fileName;

@@ -8,8 +8,8 @@ import akka.routing.RoundRobinPool;
 import com.parser.model.Offer;
 import com.parser.model.Result;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class WorkerRouter extends AbstractActor {
@@ -17,7 +17,7 @@ public class WorkerRouter extends AbstractActor {
     private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
     private ActorRef worker;
-    private Map<Long, Result> offerMap = new HashMap<>();
+    private Map<Long, Result> offerMap = new ConcurrentHashMap<>();
     private AtomicInteger done = new AtomicInteger(0);
 
     @Override
@@ -48,22 +48,28 @@ public class WorkerRouter extends AbstractActor {
     }
 
     public void process(Offer offer) {
+        String type = "";
         if(offerMap.containsKey(offer.getId())) {
-            Result result = offerMap.get(offer.getId());
-            if(!offer.equals(result.getOffer())) {
-                result.setType("m");
-            } else {
-                result.setType("");
+            Result offer1 = offerMap.get(offer.getId());
+            if(offer.hashCode() != offer1.getOfferHashCode()) {
+                type = "m";
             }
+            worker.tell(new Result(offer.getId(), type, offer.getPicture(), offer.hashCode()), self());
+            offerMap.remove(offer.getId());
         } else {
             switch (sender().path().name()) {
                 case "new-xml-parser":
-                    offerMap.put(offer.getId(), new Result("n", offer));
+                    type = "n";
                     break;
                 case "old-xml-parser":
-                    offerMap.put(offer.getId(), new Result("r", offer));
+                    type = "r";
                     break;
             }
+            offerMap.put(offer.getId(),
+                    new Result(offer.getId(),
+                            type,
+                            offer.getPicture(),
+                            offer.hashCode()));
         }
     }
 }
