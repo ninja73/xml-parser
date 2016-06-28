@@ -1,4 +1,4 @@
-package com.parser.router;
+package com.parser.actor;
 
 import akka.japi.pf.ReceiveBuilder;
 import com.parser.BaseActor;
@@ -20,26 +20,26 @@ public class WorkerThread extends BaseActor {
 
     private void sendOffer(Result result) {
         Boolean checkImg = checkImg(result.getPicture());
-        StringJoiner joiner = new StringJoiner(" ");
-        if(!result.getType().isEmpty()) {
-            joiner.add(result.getType());
+        if(!result.getType().isEmpty() || checkImg) {
+            StringJoiner joiner = new StringJoiner(" ");
+            if (!result.getType().isEmpty()) {
+                joiner.add(result.getType());
+            }
+            if (checkImg) {
+                joiner.add("p");
+            }
+            if (joiner.length() > 0) log.info(result.getId() + " " + joiner.toString());
         }
-        if(checkImg) {
-            joiner.add("p");
-        }
-        if(joiner.length() > 0 ) log.info(result.getId() + " " + joiner.toString());
     }
 
     private Boolean checkImg(String url){
         try {
             HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
-            connection.setConnectTimeout(100);
-            connection.setReadTimeout(100);
+            connection.setConnectTimeout(20);
+            connection.setReadTimeout(20);
             connection.setRequestMethod("HEAD");
             int responseCode = connection.getResponseCode();
-            if(responseCode != 200)
-                return false;
-            return true;
+            return responseCode == HttpURLConnection.HTTP_OK;
         } catch (IOException exception) {
             return false;
         }

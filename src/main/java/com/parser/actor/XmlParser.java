@@ -1,10 +1,10 @@
 package com.parser.actor;
 
 import akka.actor.ActorSelection;
-import akka.actor.Props;
 import akka.japi.pf.ReceiveBuilder;
 import com.parser.BaseActor;
 import com.parser.model.Offer;
+import com.parser.model.ResultMap;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -16,9 +16,9 @@ import javax.xml.stream.XMLStreamReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 
-public class XmlParser extends BaseActor {
+public abstract class XmlParser extends BaseActor {
 
-    private ActorSelection workerRouter;
+    protected ActorSelection workerRouter;
 
     private String fileName;
 
@@ -27,15 +27,12 @@ public class XmlParser extends BaseActor {
         workerRouter = getContext().actorSelection("/user/router");
     }
 
-    public static Props props(String fileName) {
-        return Props.create(XmlParser.class, () -> new XmlParser(fileName));
-    }
-
     public XmlParser(String fileName) {
         this.fileName = fileName;
 
         receive(ReceiveBuilder
-                .match(String.class, this::process)
+                .match(String.class, s -> parse())
+                .match(ResultMap.class, this::compareXml)
                 .build());
     }
 
@@ -44,27 +41,26 @@ public class XmlParser extends BaseActor {
         return context.createUnmarshaller();
     }
 
-    private void process(String message) {
-        log.info("Start read file: " + fileName);
-        parse();
-    }
+    abstract void process(Offer offer);
+    abstract void compareXml(ResultMap map);
+    abstract void finish();
 
-    private void parse() {
+    protected void parse() {
         XMLInputFactory factory = XMLInputFactory.newFactory();
         XMLStreamReader reader = null;
         try {
             reader = factory.createXMLStreamReader(new FileInputStream(fileName));
             Unmarshaller unmarshaller = getUnmarshaller();
-
             while (reader.hasNext()) {
                 int event = reader.next();
                 if(event == XMLStreamReader.START_ELEMENT && reader.getLocalName().equals("offer")) {
                     JAXBElement<Offer> offerJAXBElement = unmarshaller.unmarshal(reader, Offer.class);
                     Offer offer = offerJAXBElement.getValue();
-                    workerRouter.tell(offer, self());
+                    process(offer);
+                } else if(event == XMLStreamReader.END_DOCUMENT) {
+                    finish();
                 }
             }
-            workerRouter.tell("done", self());
 
         } catch (XMLStreamException | FileNotFoundException | JAXBException e) {
             log.error(e.getMessage());

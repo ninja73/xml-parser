@@ -9,11 +9,11 @@ public class Result {
     public Result() {
     }
 
-    public Result(Long id, String type, String picture, Integer offerHashCode) {
+    public Result(Long id, String type, String picture, Integer offerHasCode) {
         this.id = id;
         this.type = type;
         this.picture = picture;
-        this.offerHashCode = offerHashCode;
+        this.offerHashCode = offerHasCode;
     }
 
     public String getType() {
