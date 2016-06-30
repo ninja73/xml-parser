@@ -1,10 +1,8 @@
 package com.parser.actor;
 
-import akka.actor.ActorSelection;
-import akka.japi.pf.ReceiveBuilder;
-import com.parser.BaseActor;
 import com.parser.model.Offer;
-import com.parser.model.ResultMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -16,24 +14,13 @@ import javax.xml.stream.XMLStreamReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 
-public abstract class XmlParser extends BaseActor {
+public class XmlParser<T> {
 
-    protected ActorSelection workerRouter;
-
+    public static final Logger log = LoggerFactory.getLogger(XmlParser.class);
     private String fileName;
 
-    @Override
-    public void preStart() throws Exception {
-        workerRouter = getContext().actorSelection("/user/router");
-    }
-
-    public XmlParser(String fileName) {
+    public XmlParser(String fileName){
         this.fileName = fileName;
-
-        receive(ReceiveBuilder
-                .match(String.class, s -> parse())
-                .match(ResultMap.class, this::compareXml)
-                .build());
     }
 
     private Unmarshaller getUnmarshaller() throws JAXBException {
@@ -41,11 +28,7 @@ public abstract class XmlParser extends BaseActor {
         return context.createUnmarshaller();
     }
 
-    abstract void process(Offer offer);
-    abstract void compareXml(ResultMap map);
-    abstract void finish();
-
-    protected void parse() {
+    public void parse(Class<T> type, MethodParam<T> process, Method finish) {
         XMLInputFactory factory = XMLInputFactory.newFactory();
         XMLStreamReader reader = null;
         try {
@@ -54,11 +37,11 @@ public abstract class XmlParser extends BaseActor {
             while (reader.hasNext()) {
                 int event = reader.next();
                 if(event == XMLStreamReader.START_ELEMENT && reader.getLocalName().equals("offer")) {
-                    JAXBElement<Offer> offerJAXBElement = unmarshaller.unmarshal(reader, Offer.class);
-                    Offer offer = offerJAXBElement.getValue();
-                    process(offer);
+                    JAXBElement<T> offerJAXBElement = unmarshaller.unmarshal(reader, type);
+                    T offer = offerJAXBElement.getValue();
+                    process.apply(offer);
                 } else if(event == XMLStreamReader.END_DOCUMENT) {
-                    finish();
+                    finish.apply();
                 }
             }
 

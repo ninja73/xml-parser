@@ -20,12 +20,12 @@ public class WorkerThread extends BaseActor {
 
     private void sendOffer(Result result) {
         Boolean checkImg = checkImg(result.getPicture());
-        if(!result.getType().isEmpty() || checkImg) {
+        if(!result.getType().isEmpty() || !checkImg) {
             StringJoiner joiner = new StringJoiner(" ");
             if (!result.getType().isEmpty()) {
                 joiner.add(result.getType());
             }
-            if (checkImg) {
+            if (!checkImg) {
                 joiner.add("p");
             }
             if (joiner.length() > 0) log.info(result.getId() + " " + joiner.toString());

@@ -176,8 +176,9 @@ public class Offer {
         return result;
     }
     private int getLongHashCode(Object value) {
+        if(value == null) return 0;
         if(value instanceof Long)
-            return (int)((Long)value - ((Long)value >>> 32));
+            return (int)((Long)value ^ ((Long)value >>> 32));
         else if(value instanceof String || value instanceof Integer)
             return (value.hashCode());
         else if(value instanceof Boolean)

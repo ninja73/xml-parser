@@ -3,8 +3,8 @@ package com.parser;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
-import com.parser.actor.CompareXml;
-import com.parser.actor.LoadXml;
+import com.parser.actor.CompareXML;
+import com.parser.actor.OldXmlLoader;
 import com.parser.router.Router;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,8 +20,8 @@ public class App {
             String oldXml = args[0];
             String newXml = args[1];
 
-            ActorRef newFile = actorSystem.actorOf(LoadXml.props(newXml), "new-xml-parser");
-            actorSystem.actorOf(CompareXml.props(oldXml), "old-xml-parser");
+            ActorRef newFile = actorSystem.actorOf(OldXmlLoader.props(newXml), "new-xml-parser");
+            actorSystem.actorOf(CompareXML.props(oldXml), "old-xml-parser");
 
             actorSystem.actorOf(Props.create(Router.class), "router");
             newFile.tell("run", ActorRef.noSender());
